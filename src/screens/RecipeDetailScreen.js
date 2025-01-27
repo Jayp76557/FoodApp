@@ -1,15 +1,31 @@
 import { View, Text, StatusBar, ScrollView, Image, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { ChevronLeftIcon } from 'react-native-heroicons/outline';
 import { HeartIcon } from 'react-native-heroicons/solid';
 import { useNavigation } from '@react-navigation/native';
+import axios from 'axios';
  
 export default function RecipeDetailScreen(props) {
     let item = props.route.params;
     const [isFavourite, setFavourite] = useState(false);
     const navigation = useNavigation();
     
+    useEffect(()=>{
+        getRecipeData(item.idMeal);
+    },[])
+    
+    const getRecipeData = async (id)=>{
+        try{
+          const response = await axios.get(`https://themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
+          console.log('got recipe data: ', response.data);
+        //   if(response && response.data){
+        //     setMeals(response.data.meals);
+        //   }
+        }catch(err){
+          console.log('error: ',err.message);
+        }
+      }
   return (
     <ScrollView
         className = "flex-1 bg-white"
