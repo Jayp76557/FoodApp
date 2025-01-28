@@ -1,15 +1,18 @@
 import { View, Text, StatusBar, ScrollView, Image, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import { ChevronLeftIcon } from 'react-native-heroicons/outline';
-import { HeartIcon } from 'react-native-heroicons/solid';
+import { ChevronLeftIcon, ClockIcon, FireIcon } from 'react-native-heroicons/outline';
+import { HeartIcon, Square3Stack3DIcon, UserIcon } from 'react-native-heroicons/solid';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
+import Loading from '../components/loading';
  
 export default function RecipeDetailScreen(props) {
     let item = props.route.params;
     const [isFavourite, setFavourite] = useState(false);
     const navigation = useNavigation();
+    const [meal, setMeal] = useState(null);
+    const [loading, setLoading] = useState(true);
     
     useEffect(()=>{
         getRecipeData(item.idMeal);
@@ -19,12 +22,24 @@ export default function RecipeDetailScreen(props) {
         try{
           const response = await axios.get(`https://themealdb.com/api/json/v1/1/lookup.php?i=${id}`);
           console.log('got recipe data: ', response.data);
-        //   if(response && response.data){
-        //     setMeals(response.data.meals);
-        //   }
+          if(response && response.data){
+            setMeal(response.data.meals[0]);
+            setLoading(false);
+          }
         }catch(err){
           console.log('error: ',err.message);
         }
+      }
+
+      const ingredientsData = (meal)=>{
+        if(!meal) return [];
+        let index = [];
+        for(let i=1; i<=20; i++){
+          if(meal['strIngredient'+i]){
+            index.push(i);
+          }
+        }
+        return index;
       }
   return (
     <ScrollView
@@ -49,6 +64,108 @@ export default function RecipeDetailScreen(props) {
             </TouchableOpacity>
                 
         </View>
+    {/*meal description*/}
+    {
+      loading ? (
+        <Loading size = "large" className="mt-16"/>
+      ):(
+        <View className = "flex justify-between px-4 pt-8 space-y-4">
+          <View className = "space-y-2">
+            <Text style={{fontSize:hp(3)}} className="flex-1 font-bold text-neutral-700">
+              {meal?.strMeal}
+            </Text>
+            <Text style={{fontSize:hp(2)}} className="flex-1 font-medium text-neutral-500">
+              {meal?.strArea}
+            </Text>
+          </View>
+          
+          <View className = "flex-row justify-around">
+            <View className="flex p-2 rounded-full bg-amber-300">
+              <View style={{height:hp(6.5), width:hp(6.5)}} className="flex items-center justify-center bg-white rounded-full">
+                <ClockIcon size={hp(4)} strokeWidth={2.5} color="#525252"/>
+              </View>
+              <View className="flex items-center py-2 space-y-1">
+                <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                  35
+                </Text>
+                <Text style={{fontSize: hp(1.5)}} className="font-bold text-neutral-700">
+                  Mins
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex p-2 rounded-full bg-amber-300">
+              <View style={{height:hp(6.5), width:hp(6.5)}} className="flex items-center justify-center bg-white rounded-full">
+                <UserIcon size={hp(4)} strokeWidth={2.5} color="#525252"/>
+              </View>
+              <View className="flex items-center py-2 space-y-1">
+                <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                  1
+                </Text>
+                <Text style={{fontSize: hp(1.5)}} className="font-bold text-neutral-700">
+                  Serving
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex p-2 rounded-full bg-amber-300">
+              <View style={{height:hp(6.5), width:hp(6.5)}} className="flex items-center justify-center bg-white rounded-full">
+                <FireIcon size={hp(4)} strokeWidth={2.5} color="#525252"/>
+              </View>
+              <View className="flex items-center py-2 space-y-1">
+                <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                  100
+                </Text>
+                <Text style={{fontSize: hp(1.5)}} className="font-bold text-neutral-700">
+                  Calories
+                </Text>
+              </View>
+            </View>
+
+            <View className="flex p-2 rounded-full bg-amber-300">
+              <View style={{height:hp(6.5), width:hp(6.5)}} className="flex items-center justify-center bg-white rounded-full">
+                <Square3Stack3DIcon size={hp(4)} strokeWidth={2.5} color="#525252"/>
+              </View>
+              <View className="flex items-center py-2 space-y-1">
+                {/* <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                  35
+                </Text> */}
+                <Text style={{fontSize: hp(2)}} className="font-bold text-neutral-700">
+                  Easy
+                </Text>
+              </View>
+            </View>
+            
+          </View>
+          
+          {/* ingeridents */}
+          <View className="space-y-4">
+            <Text style={{fontSize:hp(2.5)}} className="flex-1 font-bold text-neutral-700">
+              Ingredients
+            </Text>
+            <View className="ml-3 space-y-2">
+              {
+                ingredientsData(meal).map(i=>{
+                  return(
+                    <View key={i} className="flex-row space-x-4">
+                      <View style={{height:hp(1.5),width:hp(1.5)}}
+                      className="rounded-full bg-amber-300"/>
+                      <View className="flex-row space-x-2">
+                        <Text style={{fontSize:hp(1.7)}} className="font-extrabold text-neutral-700">{meal['strMeasure'+i]}</Text>
+                        <Text style={{fontSize:hp(1.7)}} className="font-meadium text-neutral-600">{meal['strIngredient'+i]}</Text>
+
+                      </View>
+                    </View>
+                  )
+                })
+              }
+            </View>
+          </View>
+          
+        </View>
+      )
+      
+    }
     
     </ScrollView>
     
