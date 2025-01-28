@@ -6,7 +6,9 @@ import { HeartIcon, Square3Stack3DIcon, UserIcon } from 'react-native-heroicons/
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import Loading from '../components/loading';
- 
+import YoutubeIframe from 'react-native-youtube-iframe'; 
+import Animeted, { FadeInDown,FadeIn } from 'react-native-reanimated';
+
 export default function RecipeDetailScreen(props) {
     let item = props.route.params;
     const [isFavourite, setFavourite] = useState(false);
@@ -41,6 +43,14 @@ export default function RecipeDetailScreen(props) {
         }
         return index;
       }
+      const getYoutubeVideoId = url=>{
+        const regex = /[?&]v=([^&]+)/;
+        const match = url.match(regex);
+        if (match && match[1]){
+          return match[1];
+        }
+        return null;
+      }
   return (
     <ScrollView
         className = "flex-1 bg-white"
@@ -52,10 +62,11 @@ export default function RecipeDetailScreen(props) {
         <View className="flex-row justify-center">
         <Image
                     source={{ uri: item.strMealThumb }}
+                    SharedTransitionType = {item.strMeal}
                     style={{ width:wp(98), height: hp(50), borderRadius: 53, borderBottomLeftRadius: 40, borderBottomRightRadius:40, marginTop: 4}}
                 />
         </View>
-        <View className="absolute flex-row items-center justify-between w-full pt-14">
+        <Animeted.View entering={FadeIn.delay(200).duration(1000)} className="absolute flex-row items-center justify-between w-full pt-14">
             <TouchableOpacity onPress={()=> navigation.goBack()} className="p-2 ml-5 bg-white rounded-full">
                 <ChevronLeftIcon size = {hp(3.5)} strokeWidth={4.5} color="black"/>
             </TouchableOpacity>
@@ -63,23 +74,23 @@ export default function RecipeDetailScreen(props) {
                 <HeartIcon size = {hp(3.5)} strokeWidth={4.5} color={isFavourite? "red":"gray"}/>
             </TouchableOpacity>
                 
-        </View>
+        </Animeted.View>
     {/*meal description*/}
     {
       loading ? (
         <Loading size = "large" className="mt-16"/>
       ):(
         <View className = "flex justify-between px-4 pt-8 space-y-4">
-          <View className = "space-y-2">
+          <Animeted.View entering={FadeInDown.duration(700).springify().damping(12)} className = "space-y-2">
             <Text style={{fontSize:hp(3)}} className="flex-1 font-bold text-neutral-700">
               {meal?.strMeal}
             </Text>
             <Text style={{fontSize:hp(2)}} className="flex-1 font-medium text-neutral-500">
               {meal?.strArea}
             </Text>
-          </View>
+          </Animeted.View>
           
-          <View className = "flex-row justify-around">
+          <Animeted.View entering={FadeInDown.delay(100).duration(700).springify().damping(12)} className = "flex-row justify-around">
             <View className="flex p-2 rounded-full bg-amber-300">
               <View style={{height:hp(6.5), width:hp(6.5)}} className="flex items-center justify-center bg-white rounded-full">
                 <ClockIcon size={hp(4)} strokeWidth={2.5} color="#525252"/>
@@ -136,10 +147,10 @@ export default function RecipeDetailScreen(props) {
               </View>
             </View>
             
-          </View>
+          </Animeted.View>
           
           {/* ingeridents */}
-          <View className="space-y-4">
+          <Animeted.View entering={FadeInDown.delay(200).duration(700).springify().damping(12)} className="space-y-4">
             <Text style={{fontSize:hp(2.5)}} className="flex-1 font-bold text-neutral-700">
               Ingredients
             </Text>
@@ -160,8 +171,36 @@ export default function RecipeDetailScreen(props) {
                 })
               }
             </View>
-          </View>
+          </Animeted.View>
+
+          {/* Instruction */}
+          <Animeted.View entering={FadeInDown.delay(300).duration(700).springify().damping(12)} className="space-y-4">
+            <Text style={{fontSize:hp(2.5)}} className="flex-1 font-bold text-neutral-700">
+              Instructions
+            </Text>
+            <Text style={{fontSize:hp(1.6)}} className="text text-neutral-700">
+              {
+                meal?.strInstructions
+              }
+            </Text>
+          </Animeted.View>
           
+          {/* recipe video */}
+          {
+            meal.strYoutube &&(
+              <Animeted.View entering={FadeInDown.delay(400).duration(700).springify().damping(12)} className="space-y-4">
+                <Text style={{fontSize:hp(2.5)}} className="flex-1 font-bold text-neutral-700">
+                    Recipe Video
+                </Text>
+                <View>
+                  <YoutubeIframe 
+                    videoId = {getYoutubeVideoId(meal.strYoutube)}
+                    // videId="ONX74yP6JnI"
+                    height = {hp(30)}/>
+                </View>
+              </Animeted.View>
+            )
+          }
         </View>
       )
       

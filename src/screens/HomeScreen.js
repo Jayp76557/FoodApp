@@ -1,4 +1,4 @@
-import { View, Text, ScrollView,Image, TextInput } from 'react-native'
+import { View, Text, ScrollView,Image, TextInput,TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { StatusBar } from 'react-native'
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
@@ -12,18 +12,44 @@ export default function HomeScreen() {
 const [activeCategory, setActiveCategory] = useState('Beef');
  const [categories, setCategories] = useState([]);
  const [meals, setMeals] = useState([]);
+ const [searchTerm, setSearchTerm] = useState(''); // State for search input
+ const [filteredMeals, setFilteredMeals] = useState([]); // State for filtered meals
+
   
  useEffect(()=>{
   getCategories();
   getCRecipes();
  },[])
 
+//  useEffect(() => {
+//   // Filter meals based on search term whenever it changes
+//   if (searchTerm === '') {
+//     setFilteredMeals(meals); // Show all meals when search term is empty
+//   } else {
+//     const filtered = meals.filter((meal) =>
+//       meal.strMeal.toLowerCase().includes(searchTerm.toLowerCase())
+//     );
+//     setFilteredMeals(filtered);
+//   }
+// }, [searchTerm, meals]);
+
 const handleChangeCategory = category=>{
   getCRecipes(category);
   setActiveCategory(category);
   setMeals([]);
+  // setSearchTerm(''); // Clear search term when category changes
 }
- 
+const handleSearch = () => {
+  if (searchTerm.trim() !== '') {
+    const filtered = meals.filter((meal) =>
+      meal.strMeal.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredMeals(filtered);
+  } else {
+    setFilteredMeals(meals); // Show all meals if search is empty
+  }
+};
+
 const getCategories = async ()=>{
   try{
     const response = await axios.get('https://themealdb.com/api/json/v1/1/categories.php');
@@ -41,6 +67,7 @@ const getCRecipes = async (category="Beef")=>{
     // console.log('got categories: ', response.data);
     if(response && response.data){
       setMeals(response.data.meals);
+      setFilteredMeals(response.data.meals); // Initialize filtered meals
     }
   }catch(err){
     console.log('error: ',err.message);
@@ -71,20 +98,33 @@ const getCRecipes = async (category="Beef")=>{
             <TextInput
               placeholder='Search any recipe'
               placeholderTextColor={'gray'}
+              value={searchTerm}
+              onChangeText={(text) => setSearchTerm(text)}
               style={{fontSize:hp(1.7)}}
               className="flex-1 pl-3 mb-1 text-base tracking-wider"/>
-              <View className="p-3 bg-white rounded-full">
-                <MagnifyingGlassIcon size={hp(2.5)} strokeWidth={3} color="gray"/>
-              </View>
+              
+              <TouchableOpacity onPress={handleSearch}>
+            <View className="p-3 bg-white rounded-full">
+              <MagnifyingGlassIcon size={hp(2.5)} strokeWidth={3} color="gray" />
+            </View>
+          </TouchableOpacity>
           </View>
+          
           {/* categories */}
           <View>
             {categories.length>0 && <Categories categories={categories} activeCategory={activeCategory} handleChangeCategory={handleChangeCategory} />}
           </View>
-            {/* recipes */}
-            <View>
-              <Recipes meals={meals} categories={categories} />
-            </View>
+          
+          {/* Recipes or "No Recipes Found" Message */}
+        <View>
+          {filteredMeals.length > 0 ? (
+            <Recipes meals={filteredMeals} categories={categories} />
+          ) : (
+            <Text className="mt-6 text-center text-gray-700" style={{ fontSize: hp(2.5) }}>
+              No recipes found. Try a different search!
+            </Text>
+          )}
+        </View>
           </ScrollView>
     </View>
   )
